@@ -139,7 +139,8 @@ export function initMixin(BScroll) {
   }
 
   BScroll.prototype._addDOMEvents = function () {
-    //addEvent事件是从dom.js中传入的。这个函数封装了addEventListener。这个函数被用来传入handleDOMelent函数中
+    //addEvent事件是从dom.js中传入的。这个函数封装了addEventListener。这个函数被用来传入handleDOMelent函数中。这个原生的dom绑定事件的函数。
+    //而bscroll有自己绑定事件的方法。
     let eventOperation = addEvent
     this._handleDOMEvents(eventOperation).
   }
