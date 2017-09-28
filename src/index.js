@@ -1,9 +1,11 @@
 import {eventMixin} from './scroll/event'
 import {initMixin} from './scroll/init'
+//这个模块用来完成事件监听的
 import {coreMixin} from './scroll/core'
 import {snapMixin} from './scroll/snap'
 import {wheelMixin} from './scroll/wheel'
 import {scrollbarMixin} from './scroll/scrollbar'
+//这个模块是用来完成scrollbar这个功能的
 import {pullDownMixin} from './scroll/pulldown'
 import {pullUpMixin} from './scroll/pullup'
 
