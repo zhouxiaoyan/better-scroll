@@ -11,9 +11,25 @@ import { ease } from '../util/ease'
 import { momentum } from '../util/momentum'
 import { requestAnimationFrame, cancelAnimationFrame } from '../util/raf'
 import { getNow } from '../util/lang'
+//getnow函数function getNow() {
+//  return window.performance && window.performance.now ? window.performance.now() + window.performance.timing.navigationStart : +new Date();
+//}
+//Performance API用于精确度量、控制、增强浏览器的性能表现。这个API为测量网站性能，提供以前没有办法做到的精度。
+//比如，为了得到脚本运行的准确耗时，需要一个高精度时间戳。传统的做法是使用Date对象的getTime方法。上面这种做法有两个不足之处。首先，getTime方法（以及Date对象的其他方法）都只能精确到毫秒级别（一秒的千分之一），想要得到更小的时间差别就无能为力了；
+//其次，这种写法只能获取代码运行过程中的时间进度，无法知道一些后台事件的时间进度，比如浏览器用了多少时间从服务器加载网页。
+
+//为了解决这两个不足之处，ECMAScript 5引入“高精度时间戳”这个API，部署在performance对象上。它的精度可以达到1毫秒的千分之一（1秒的百万分之一），这对于衡量的程序的细微差别，提高程序运行速度很有好处，而且还可以获取后台事件的时间进度。
+
+//目前，所有主要浏览器都已经支持performance对象，包括Chrome 20+、Firefox 15+、IE 10+、Opera 15+。
+//performance.timing对象
+//performance对象的timing属性指向一个对象，它包含了各种与浏览器性能有关的时间数据，提供浏览器处理网页各个阶段的耗时。比如，performance.timing.navigationStart就是浏览器处理当前网页的启动时间。
 
 export function coreMixin(BScroll) {
   BScroll.prototype._start = function (e) {
+    //这里通过触发事件传入的event对象的type来判断是mouse事件还是touch事件。
+    //在前面eventtype是一个对象，eventType = { touchstart: TOUCH_EVENT,touchmove: TOUCH_EVENT,touchend: TOUCH_EVENT,mousedown: MOUSE_EVENT,
+ // mousemove: MOUSE_EVENT, mouseup: MOUSE_EVENT}   这里没有用if else对事件type进行一一判断。然后把可能出现的情况定义在对象中，然后进行匹配
+    //就好。就像jquery中的钩子机制。
     let _eventType = eventType[e.type]
     if (_eventType !== TOUCH_EVENT) {
       if (e.button !== 0) {
@@ -46,16 +62,17 @@ export function coreMixin(BScroll) {
     }
 
     this.stop()
-
+//point这里存的是mouse事件或者是touch事件。touch事件还有是不是移动设备的判断。这里没有用到移动设备的判断，而是对触发事件进行了判断。
     let point = e.touches ? e.touches[0] : e
 
     this.startX = this.x
     this.startY = this.y
     this.absStartX = this.x
     this.absStartY = this.y
+    //把起始点的那个位置保存下来了
     this.pointX = point.pageX
     this.pointY = point.pageY
-
+//钩子函数也就是绑定到beforeScrollstart事件，然后这里触发。
     this.trigger('beforeScrollStart')
   }
 
@@ -69,12 +86,13 @@ export function coreMixin(BScroll) {
     }
 
     let point = e.touches ? e.touches[0] : e
+    //移动过程中触发了新的点，新的点的位置减去开始触发的点的位置。是移动的距离
     let deltaX = point.pageX - this.pointX
     let deltaY = point.pageY - this.pointY
-
+//新的点代替了最开始的点
     this.pointX = point.pageX
     this.pointY = point.pageY
-
+//保存了这个距离。并且进行累加。不断触发就跟循环一样
     this.distX += deltaX
     this.distY += deltaY
 
@@ -82,14 +100,15 @@ export function coreMixin(BScroll) {
     let absDistY = Math.abs(this.distY)
 
     let timestamp = getNow()
-
+//我们需要至少移动momentumLimitDistance来启动滚动，并且时间上要小于this.options.momentumLimitTime
     // We need to move at least momentumLimitDistance pixels for the scrolling to initiate
     if (timestamp - this.endTime > this.options.momentumLimitTime && (absDistY < this.options.momentumLimitDistance && absDistX < this.options.momentumLimitDistance)) {
       return
     }
-
+//如果你滚动一个方向锁定另一个方向，这里有疑问？应该是说锁定那个方向 就那个方向滚动吧，而不是那个方向不滚动？待求证。
     // If you are scrolling in one direction lock the other
     if (!this.directionLocked && !this.options.freeScroll) {
+      //这里做了判断，水平方向上的距离大于垂直方向上的距离+this.options.directionLockThreshold（这里设置为10），那么锁定水平方向
       if (absDistX > absDistY + this.options.directionLockThreshold) {
         this.directionLocked = 'h'		// lock horizontally
       } else if (absDistY >= absDistX + this.options.directionLockThreshold) {
@@ -107,6 +126,7 @@ export function coreMixin(BScroll) {
         return
       }
       deltaY = 0
+      //如果锁定方向是水平方向。那么deltaY就是0
     } else if (this.directionLocked === 'v') {
       if (this.options.eventPassthrough === 'horizontal') {
         e.preventDefault()
@@ -119,12 +139,13 @@ export function coreMixin(BScroll) {
 
     deltaX = this.hasHorizontalScroll ? deltaX : 0
     deltaY = this.hasVerticalScroll ? deltaY : 0
+    //移动方向的判断。如果大于0，就是-1，小于0就是1.其他就是0
     this.movingDirectionX = deltaX > 0 ? -1 : deltaX < 0 ? 1 : 0
     this.movingDirectionY = deltaY > 0 ? -1 : deltaY < 0 ? 1 : 0
 
     let newX = this.x + deltaX
     let newY = this.y + deltaY
-
+//在边界之外慢下来或停止
     // Slow down or stop if outside of the boundaries
     if (newX > 0 || newX < this.maxScrollX) {
       if (this.options.bounce) {
@@ -167,7 +188,7 @@ export function coreMixin(BScroll) {
         y: this.y
       })
     }
-
+//dody元素或者document，html元素的scrollleft和scrolltop
     let scrollLeft = document.documentElement.scrollLeft || window.pageXOffset || document.body.scrollLeft
     let scrollTop = document.documentElement.scrollTop || window.pageYOffset || document.body.scrollTop
 
@@ -331,6 +352,7 @@ export function coreMixin(BScroll) {
   }
 
   BScroll.prototype._transitionTime = function (time = 0) {
+    //transition有前缀的字段以已经存入style中。不用每次调用函数来添加有前缀的属性字段。
     this.scrollerStyle[style.transitionDuration] = time + 'ms'
 
     if (this.options.wheel) {
@@ -378,6 +400,7 @@ export function coreMixin(BScroll) {
   }
 
   BScroll.prototype._translate = function (x, y) {
+    //如果使用css3的transform的话 就用translate来定位置，否则就是style.left和style.right来定位置
     if (this.options.useTransform) {
       this.scrollerStyle[style.transform] = `translate(${x}px,${y}px)${this.translateZ}`
     } else {
@@ -400,12 +423,13 @@ export function coreMixin(BScroll) {
 
     if (this.indicators) {
       for (let i = 0; i < this.indicators.length; i++) {
-        this.indicators[i].updatePosition()
+        this.indicators[i].updatePosition()//这里滚动条也会跟着update数据，因为内容卷上去的距离改变了
       }
     }
   }
 
   BScroll.prototype._animate = function (destX, destY, duration, easingFn) {
+    //用循环来模拟动画
     let me = this
     let startX = this.x
     let startY = this.y
@@ -450,7 +474,7 @@ export function coreMixin(BScroll) {
     cancelAnimationFrame(this.animateTimer)
     step()
   }
-
+//scrollby是移动相对位置。内部调用的是移动绝对位置。
   BScroll.prototype.scrollBy = function (x, y, time = 0, easing = ease.bounce) {
     x = this.x + x
     y = this.y + y
@@ -462,6 +486,7 @@ export function coreMixin(BScroll) {
     this.isInTransition = this.options.useTransition && time > 0 && (x !== this.x || y !== this.y)
 
     if (!time || this.options.useTransition) {
+      //设定了transition的时间，还有渐变过程函数。然后translate
       this._transitionTimingFunction(easing.style)
       this._transitionTime(time)
       this._translate(x, y)
@@ -570,6 +595,7 @@ export function coreMixin(BScroll) {
       if (this.options.wheel) {
         this.target = this.items[Math.round(-pos.y / this.itemHeight)]
       } else {
+        //触发scrollend事件
         this.trigger('scrollEnd', {
           x: this.x,
           y: this.y
