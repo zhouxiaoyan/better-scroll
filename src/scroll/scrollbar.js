@@ -147,7 +147,7 @@ Indicator.prototype.fade = function (visible, hold) {
 
 Indicator.prototype.updatePosition = function () {
   if (this.direction === 'vertical') {
-    //this.scoller.y表示这个scroll内容起始位置的垂直坐标位置。
+    //this.scoller.y表示这个scroll内容此时此刻向上滚动的垂直距离。最大的垂直距离是MaxscrollY.
     let y = Math.round(this.sizeRatioY * this.scroller.y)
 
     if (y < 0) {
@@ -223,8 +223,8 @@ Indicator.prototype._calculate = function () {
     this.indicatorHeight = Math.max(Math.round(wrapperHeight * wrapperHeight / (this.scroller.scrollerHeight || wrapperHeight || 1)), INDICATOR_MIN_LEN)
     //height设置的时候要加px 所以
     this.indicatorStyle.height = `${this.indicatorHeight}px`
-    //maxPosY是说这个滚动条的位置最大的时候  就是一直拉到下面最底部的时候。也就是外层div的高度减去里层div的高度。但是还有一个设置的最大的滚动位置
-    //并且计算了他们的比值。
+    //maxPosY是说这个滚动条的位置最大的时候  就是一直拉到下面最底部的时候。也就是外层div的高度减去里层div的高度。
+    //maxScrollY指的是内容可以向上卷多少的高度。为负值。比如假设内容的高度是300px，包裹内容的容器高度是200px，那么这个maxscrollY就是-100px。
     this.maxPosY = wrapperHeight - this.indicatorHeight
     this.sizeRatioY = this.maxPosY / this.scroller.maxScrollY
   } else {
