@@ -8,7 +8,8 @@ import {pullDownMixin} from './scroll/pulldown'
 import {pullUpMixin} from './scroll/pullup'
 
 import {warn} from './util/debug'
-
+//组装构造函数。通过函数来进行组装。也就是加载的时候运行。而有点不是加载的时候通过别的函数来进行组装构造函数。而是加载的时候就加载完整的构造函数。
+//也就是说模块之间也是通过函数来完成他们之间的调用的。而有的是模块之间直接调用。
 function BScroll(el, options) {
   //对el的这个参数进行校验。如果是选择器就用document.querySelector（el），如果不是就是dom。如果是!this.wrapper与null，undeifined的区别
   this.wrapper = typeof el === 'string' ? document.querySelector(el) : el
