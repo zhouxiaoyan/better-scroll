@@ -139,8 +139,9 @@ export function initMixin(BScroll) {
   }
 
   BScroll.prototype._addDOMEvents = function () {
+    //addEvent事件是从dom.js中传入的。这个函数封装了addEventListener。这个函数被用来传入handleDOMelent函数中
     let eventOperation = addEvent
-    this._handleDOMEvents(eventOperation)
+    this._handleDOMEvents(eventOperation).
   }
 
   BScroll.prototype._removeDOMEvents = function () {
@@ -149,20 +150,24 @@ export function initMixin(BScroll) {
   }
 
   BScroll.prototype._handleDOMEvents = function (eventOperation) {
+    //参数当中有没有bandTOWrapper  如果没有就是传入的那个元素或者window
     let target = this.options.bindToWrapper ? this.wrapper : window
+    //监听了window的orientation  和resize事件。this指的是bscroll对象
     eventOperation(window, 'orientationchange', this)
     eventOperation(window, 'resize', this)
 
     if (this.options.click) {
+      //如果有click事件。监听this.wrapper上的click事件
       eventOperation(this.wrapper, 'click', this, true)
     }
-
+    //如果支持mouse事件  如何判断是否支持mouse事件。就看是否只是touch事件，如果 touchStart in  window为true就是支持
     if (!this.options.disableMouse) {
       eventOperation(this.wrapper, 'mousedown', this)
       eventOperation(target, 'mousemove', this)
       eventOperation(target, 'mousecancel', this)
       eventOperation(target, 'mouseup', this)
     }
+    //通过判断是不是移动设备 分别进行事件监听。放在一个函数集中处理
 
     if (hasTouch && !this.options.disableTouch) {
       eventOperation(this.wrapper, 'touchstart', this)
@@ -170,7 +175,7 @@ export function initMixin(BScroll) {
       eventOperation(target, 'touchcancel', this)
       eventOperation(target, 'touchend', this)
     }
-
+//监听的是过渡事件完成之后触发。
     eventOperation(this.scroller, style.transitionEnd, this)
   }
 
@@ -179,6 +184,7 @@ export function initMixin(BScroll) {
       this._initSnap()
     }
     if (this.options.scrollbar) {
+      //根据参数或者说配置来进行初始化
       this._initScrollbar()
     }
     if (this.options.pullUpLoad) {
